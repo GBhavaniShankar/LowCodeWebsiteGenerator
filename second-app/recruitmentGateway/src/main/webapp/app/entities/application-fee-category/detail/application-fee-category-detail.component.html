@@ -1,0 +1,40 @@
+<div class="d-flex justify-content-center">
+  <div class="col-8">
+    @if (applicationFeeCategory(); as applicationFeeCategoryRef) {
+      <div>
+        <h2 data-cy="applicationFeeCategoryDetailsHeading">
+          <span jhiTranslate="recruitmentGatewayApp.applicationFeeCategory.detail.title">Application Fee Category</span>
+        </h2>
+
+        <hr />
+
+        <jhi-alert-error />
+
+        <jhi-alert />
+
+        <dl class="row-md jh-entity-details">
+          <dt><span jhiTranslate="global.field.id">ID</span></dt>
+          <dd>
+            <span>{{ applicationFeeCategoryRef.id }}</span>
+          </dd>
+          <dt><span jhiTranslate="recruitmentGatewayApp.applicationFeeCategory.name">Name</span></dt>
+          <dd>
+            <span>{{ applicationFeeCategoryRef.name }}</span>
+          </dd>
+          <dt><span jhiTranslate="recruitmentGatewayApp.applicationFeeCategory.fee">Fee</span></dt>
+          <dd>
+            <span>{{ applicationFeeCategoryRef.fee }}</span>
+          </dd>
+        </dl>
+
+        <button type="submit" (click)="previousState()" class="btn btn-info" data-cy="entityDetailsBackButton">
+          <fa-icon icon="arrow-left"></fa-icon>&nbsp;<span jhiTranslate="entity.action.back">Back</span>
+        </button>
+
+        <button type="button" [routerLink]="['/application-fee-category', applicationFeeCategoryRef.id, 'edit']" class="btn btn-primary">
+          <fa-icon icon="pencil-alt"></fa-icon>&nbsp;<span jhiTranslate="entity.action.edit">Edit</span>
+        </button>
+      </div>
+    }
+  </div>
+</div>

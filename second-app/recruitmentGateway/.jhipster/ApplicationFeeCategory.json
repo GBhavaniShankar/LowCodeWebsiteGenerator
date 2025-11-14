@@ -1,0 +1,25 @@
+{
+  "annotations": {
+    "changelogDate": "20251112133952"
+  },
+  "applications": ["recruitmentGateway", "recruitmentBackend"],
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "name",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "fee",
+      "fieldType": "BigDecimal",
+      "fieldValidateRules": ["required", "min"],
+      "fieldValidateRulesMin": "0"
+    }
+  ],
+  "microserviceName": "recruitmentBackend",
+  "name": "ApplicationFeeCategory",
+  "pagination": "pagination",
+  "relationships": [],
+  "service": "serviceClass"
+}

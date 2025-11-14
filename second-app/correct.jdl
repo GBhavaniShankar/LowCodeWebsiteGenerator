@@ -1,0 +1,123 @@
+// =================================================================
+// 0. ENUM DEFINITIONS (MUST BE FIRST)
+// =================================================================
+
+enum ApplicationStatus {
+SAVED, SUBMITTED, SHORTLISTED, INTERVIEW_DATE_SET, WITHDRAWN, CLOSED
+}
+
+enum NotificationSource {
+ADMIN, SYSTEM
+}
+
+// =================================================================
+// 1. GATEWAY APPLICATION (Front-end & Auth Proxy)
+// =================================================================
+application {
+config {
+baseName recruitmentGateway
+applicationType gateway // Acts as the client entry point
+packageName com.recruitment.gateway
+authenticationType jwt // JWT required for this split
+clientFramework angularX
+databaseType sql // The gateway still needs a DB for its own settings
+serverPort 8080 // Primary entry port for the UI
+buildTool maven
+skipServer true // Only generate the client side (UI)
+}
+// The gateway needs to generate UI for all these entities
+entities Application, Config, Notification, Advertisement, Applicant, ApplicationFeeCategory
+}
+
+// =================================================================
+// 2. BACKEND MICROSERVICE (User & Business Logic)
+// =================================================================
+application {
+config {
+baseName recruitmentBackend
+applicationType microservice // Acts as the headless backend
+packageName com.recruitment.backend
+authenticationType jwt
+databaseType sql
+devDatabaseType h2Disk // Use in-memory H2 for easy local dev
+prodDatabaseType postgresql
+serverPort 8081 // Unique port for the backend API
+buildTool maven
+skipClient true // Only generate the server side (API DB)
+serviceDiscoveryType no // Disable service discovery for local running
+}
+// The backend hosts the data and API endpoints for all these entities
+entities Application, Config, Notification, Advertisement, Applicant, ApplicationFeeCategory
+}
+
+// =================================================================
+// 3. ENTITY DEFINITIONS (Injecting Requirements)
+// =================================================================
+
+// Applicant (Now manages its OWN authentication details)
+entity Applicant {
+// Core Fields for Authentication Profile (replaces built-in User)
+username String required unique minlength(5) // User's unique username (or email)
+email String required unique pattern(/^[^@\s]+@[^@\s]+.[^@\s]+$/)
+passwordHash String // Storage for hashed password (You will implement logic here)
+firstName String
+lastName String
+isAccountActivated Boolean // Replaces 'activated' field
+authorities String // Stores authorities roles (e.g., ROLE_USER, ROLE_ADMIN)
+
+// Other profile fields
+}
+
+// Application Management
+entity Application {
+uniqueNumber String required unique // Requirement: unique application number
+submissionDate Instant
+status ApplicationStatus required // To track status shortlists
+paymentSuccessful Boolean // Tracks payment
+}
+
+// Admin Config
+entity Config {
+portalActive Boolean // Overall portal status
+startDate Instant // Requirement: Start Date
+endDate Instant // Requirement: End Date
+sampleFormUrl String // Requirement: Sample Form link
+}
+
+entity ApplicationFeeCategory {
+name String required
+fee BigDecimal required min(0) // Requirement: Define fees per category
+}
+
+// Dashboard Content
+entity Advertisement { // Requirement: Advertisement
+title String required
+content TextBlob
+}
+
+entity Notification { // Requirement: Notification (News updates)
+title String required
+message TextBlob
+isRead Boolean
+generatedBy NotificationSource required
+}
+
+// =================================================================
+// 4. RELATIONSHIPS & DEPLOYMENT
+// =================================================================
+
+// NO relationship to the built-in 'User' entity.
+
+// Define the relationship to the custom Applicant
+relationship ManyToOne {
+Application{applicant(username)} to Applicant, // Link Application to Applicant by username
+Application{feeCategory} to ApplicationFeeCategory,
+Notification{recipient(username)} to Applicant // Link Notification to Applicant by username
+}
+
+// Deployment: All entities hosted on the Backend Microservice
+microservice Applicant, Application, Config, Notification, Advertisement, ApplicationFeeCategory with recruitmentBackend
+
+dto * with mapstruct
+service * with serviceClass
+paginate * with pagination
