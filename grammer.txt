@@ -1,0 +1,6 @@
+Project : Application
+Auth : jwt ( keep any other one type for testing out this)
+MildVerification : Yes ( mailid verification is to be done if yes else no)
+
+ --- rest application 
+ --- rest grammer to be desided
