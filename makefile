@@ -6,7 +6,8 @@ CFLAGS = -Wall -Wextra -O2
 
 OBJS = config.tab.o lex.yy.o main.o file_util.o \
        pom_generator.o resources_generator.o java_core_generator.o \
-       security_generator.o user_generator.o auth_generator.o demo_generator.o
+       security_generator.o user_generator.o auth_generator.o demo_generator.o \
+       init_generator.o
 
 all: backendgen
 

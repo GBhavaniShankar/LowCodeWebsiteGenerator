@@ -7,21 +7,21 @@
 
 %%
 
-[ \t\r]+         ;
+[ \t\r]+         ;       /* skip whitespace */
 
 "Project"        { return PROJECT_K; }
 "Auth"           { return AUTH_K; }
 "MildVerification" { return MAILVERIF_K; }
+"AdminEmail"     { return ADMIN_EMAIL_K; }
+"AdminPassword"  { return ADMIN_PASSWORD_K; }
 
 ":"              { return COLON; }
 "\n"             { return NEWLINE; }
 
-"Yes"            { return YES; }
-"No"             { return NO; }
-
-"jwt"|"basic"    { yylval.str = strdup(yytext); return AUTH_VALUE; }
-
-[a-zA-Z_][a-zA-Z0-9_]* { yylval.str = strdup(yytext); return IDENT; }
+[a-zA-Z0-9_@.\-]+ {
+    yylval.str = strdup(yytext);
+    return IDENT;
+}
 
 "#".*            ;
 
@@ -29,4 +29,6 @@
 
 %%
 
-int yywrap(void) { return 1; }
+int yywrap(void) {
+    return 1;
+}

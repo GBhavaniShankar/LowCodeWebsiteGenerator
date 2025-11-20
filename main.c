@@ -2,11 +2,12 @@
 #include <stdlib.h>
 #include "config.h"
 
+/* parser stuff */
 int yyparse(void);
 extern FILE *yyin;
+AppConfig g_config = {NULL, AUTH_JWT, 0, NULL, NULL};
 
-AppConfig g_config = {NULL, AUTH_JWT, 0};
-
+/* generators */
 #include "file_util.h"
 #include "pom_generator.h"
 #include "resources_generator.h"
@@ -15,6 +16,7 @@ AppConfig g_config = {NULL, AUTH_JWT, 0};
 #include "user_generator.h"
 #include "auth_generator.h"
 #include "demo_generator.h"
+#include "init_generator.h"
 
 int main(int argc, char **argv)
 {
@@ -34,9 +36,12 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    /* defaults */
     g_config.project_name = NULL;
     g_config.auth_type = AUTH_JWT;
     g_config.mail_verification = 0;
+    g_config.admin_email = NULL;
+    g_config.admin_password = NULL;
 
     if (yyparse() != 0)
     {
@@ -55,6 +60,7 @@ int main(int argc, char **argv)
     generate_user(&g_config, root);
     generate_auth(&g_config, root);
     generate_demo(&g_config, root);
+    generate_init(&g_config, root);
 
     printf("Project generated at: %s\n", root);
     return 0;

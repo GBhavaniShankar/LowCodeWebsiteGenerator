@@ -57,7 +57,7 @@ void generate_auth(const AppConfig *cfg, const char *root)
             "    @PostMapping(\"/register\")\n"
             "    public ResponseEntity<String> register(@Valid @RequestBody RegisterRequest request) {\n"
             "        authService.register(request);\n"
-            "        return ResponseEntity.ok(\"Registration successful\");\n"
+            "        return ResponseEntity.ok(\"Registration successful. Please check your email.\");\n"
             "    }\n"
             "\n"
             "    @PostMapping(\"/login\")\n"
@@ -72,7 +72,7 @@ void generate_auth(const AppConfig *cfg, const char *root)
                 "    @GetMapping(\"/verify\")\n"
                 "    public ResponseEntity<String> verify(@RequestParam(\"token\") String token) {\n"
                 "        authService.verifyEmail(token);\n"
-                "        return ResponseEntity.ok(\"Email verified successfully\");\n"
+                "        return ResponseEntity.ok(\"Email verified successfully. You can now log in.\");\n"
                 "    }\n");
     }
 
@@ -89,14 +89,16 @@ void generate_auth(const AppConfig *cfg, const char *root)
         return;
     }
 
-    if (cfg->auth_type == AUTH_JWT)
+    if (cfg->mail_verification)
     {
-        if (cfg->mail_verification)
+        /* With email verification */
+        if (cfg->auth_type == AUTH_JWT)
         {
             fprintf(f,
                     "package com.example.app.auth;\n"
                     "\n"
                     "import com.example.app.security.JwtService;\n"
+                    "import com.example.app.user.Role;\n"
                     "import com.example.app.user.User;\n"
                     "import com.example.app.user.UserRepository;\n"
                     "import jakarta.transaction.Transactional;\n"
@@ -106,30 +108,26 @@ void generate_auth(const AppConfig *cfg, const char *root)
                     "import org.springframework.security.crypto.password.PasswordEncoder;\n"
                     "import org.springframework.stereotype.Service;\n"
                     "\n"
-                    "import java.time.Instant;\n"
-                    "import java.time.temporal.ChronoUnit;\n"
-                    "import java.util.UUID;\n"
-                    "\n"
                     "@Service\n"
                     "public class AuthService {\n"
                     "    private final UserRepository userRepository;\n"
                     "    private final PasswordEncoder passwordEncoder;\n"
                     "    private final AuthenticationManager authenticationManager;\n"
                     "    private final JwtService jwtService;\n"
-                    "    private final VerificationTokenRepository tokenRepository;\n"
+                    "    private final VerificationTokenRepository verificationTokenRepository;\n"
                     "    private final EmailService emailService;\n"
                     "\n"
                     "    public AuthService(UserRepository userRepository,\n"
                     "                       PasswordEncoder passwordEncoder,\n"
                     "                       AuthenticationManager authenticationManager,\n"
                     "                       JwtService jwtService,\n"
-                    "                       VerificationTokenRepository tokenRepository,\n"
+                    "                       VerificationTokenRepository verificationTokenRepository,\n"
                     "                       EmailService emailService) {\n"
                     "        this.userRepository = userRepository;\n"
                     "        this.passwordEncoder = passwordEncoder;\n"
                     "        this.authenticationManager = authenticationManager;\n"
                     "        this.jwtService = jwtService;\n"
-                    "        this.tokenRepository = tokenRepository;\n"
+                    "        this.verificationTokenRepository = verificationTokenRepository;\n"
                     "        this.emailService = emailService;\n"
                     "    }\n"
                     "\n"
@@ -137,20 +135,17 @@ void generate_auth(const AppConfig *cfg, const char *root)
                     "    public void register(RegisterRequest request) {\n"
                     "        if (userRepository.existsByEmail(request.getEmail()))\n"
                     "            throw new IllegalArgumentException(\"Email already in use\");\n"
+                    "\n"
                     "        User user = new User();\n"
                     "        user.setEmail(request.getEmail());\n"
                     "        user.setPassword(passwordEncoder.encode(request.getPassword()));\n"
-                    "        user.setEnabled(false);\n"
+                    "        user.setRole(Role.USER);\n"
+                    "        user.setEnabled(false); // wait for verification\n"
                     "        userRepository.save(user);\n"
                     "\n"
-                    "        String tokenValue = UUID.randomUUID().toString();\n"
-                    "        VerificationToken vt = new VerificationToken();\n"
-                    "        vt.setToken(tokenValue);\n"
-                    "        vt.setUser(user);\n"
-                    "        vt.setExpiryDate(Instant.now().plus(24, ChronoUnit.HOURS));\n"
-                    "        tokenRepository.save(vt);\n"
-                    "\n"
-                    "        emailService.sendVerificationEmail(user.getEmail(), tokenValue);\n"
+                    "        VerificationToken token = new VerificationToken(user);\n"
+                    "        verificationTokenRepository.save(token);\n"
+                    "        emailService.sendVerificationEmail(user.getEmail(), token.getToken());\n"
                     "    }\n"
                     "\n"
                     "    public AuthResponse login(AuthRequest request) {\n"
@@ -171,24 +166,113 @@ void generate_auth(const AppConfig *cfg, const char *root)
                     "\n"
                     "    @Transactional\n"
                     "    public void verifyEmail(String tokenValue) {\n"
-                    "        VerificationToken token = tokenRepository.findByToken(tokenValue)\n"
+                    "        VerificationToken token = verificationTokenRepository.findByToken(tokenValue)\n"
                     "                .orElseThrow(() -> new IllegalArgumentException(\"Invalid verification token\"));\n"
-                    "        if (token.getExpiryDate().isBefore(Instant.now())) {\n"
-                    "            throw new IllegalArgumentException(\"Verification token expired\");\n"
+                    "\n"
+                    "        if (token.isExpired()) {\n"
+                    "            throw new IllegalStateException(\"Verification token expired\");\n"
                     "        }\n"
                     "        User user = token.getUser();\n"
                     "        user.setEnabled(true);\n"
                     "        userRepository.save(user);\n"
-                    "        tokenRepository.delete(token);\n"
+                    "        verificationTokenRepository.delete(token);\n"
                     "    }\n"
                     "}\n");
         }
         else
         {
+            /* BASIC + verification (less interesting, but complete) */
+            fprintf(f,
+                    "package com.example.app.auth;\n"
+                    "\n"
+                    "import com.example.app.user.Role;\n"
+                    "import com.example.app.user.User;\n"
+                    "import com.example.app.user.UserRepository;\n"
+                    "import jakarta.transaction.Transactional;\n"
+                    "import org.springframework.security.authentication.AuthenticationManager;\n"
+                    "import org.springframework.security.authentication.BadCredentialsException;\n"
+                    "import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;\n"
+                    "import org.springframework.security.crypto.password.PasswordEncoder;\n"
+                    "import org.springframework.stereotype.Service;\n"
+                    "\n"
+                    "@Service\n"
+                    "public class AuthService {\n"
+                    "    private final UserRepository userRepository;\n"
+                    "    private final PasswordEncoder passwordEncoder;\n"
+                    "    private final AuthenticationManager authenticationManager;\n"
+                    "    private final VerificationTokenRepository verificationTokenRepository;\n"
+                    "    private final EmailService emailService;\n"
+                    "\n"
+                    "    public AuthService(UserRepository userRepository,\n"
+                    "                       PasswordEncoder passwordEncoder,\n"
+                    "                       AuthenticationManager authenticationManager,\n"
+                    "                       VerificationTokenRepository verificationTokenRepository,\n"
+                    "                       EmailService emailService) {\n"
+                    "        this.userRepository = userRepository;\n"
+                    "        this.passwordEncoder = passwordEncoder;\n"
+                    "        this.authenticationManager = authenticationManager;\n"
+                    "        this.verificationTokenRepository = verificationTokenRepository;\n"
+                    "        this.emailService = emailService;\n"
+                    "    }\n"
+                    "\n"
+                    "    @Transactional\n"
+                    "    public void register(RegisterRequest request) {\n"
+                    "        if (userRepository.existsByEmail(request.getEmail()))\n"
+                    "            throw new IllegalArgumentException(\"Email already in use\");\n"
+                    "\n"
+                    "        User user = new User();\n"
+                    "        user.setEmail(request.getEmail());\n"
+                    "        user.setPassword(passwordEncoder.encode(request.getPassword()));\n"
+                    "        user.setRole(Role.USER);\n"
+                    "        user.setEnabled(false);\n"
+                    "        userRepository.save(user);\n"
+                    "\n"
+                    "        VerificationToken token = new VerificationToken(user);\n"
+                    "        verificationTokenRepository.save(token);\n"
+                    "        emailService.sendVerificationEmail(user.getEmail(), token.getToken());\n"
+                    "    }\n"
+                    "\n"
+                    "    public AuthResponse login(AuthRequest request) {\n"
+                    "        var authToken = new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword());\n"
+                    "        try {\n"
+                    "            authenticationManager.authenticate(authToken);\n"
+                    "        } catch (BadCredentialsException ex) {\n"
+                    "            throw new BadCredentialsException(\"Invalid credentials\");\n"
+                    "        }\n"
+                    "        User user = userRepository.findByEmail(request.getEmail())\n"
+                    "                .orElseThrow(() -> new IllegalArgumentException(\"User not found\"));\n"
+                    "        if (!user.isEnabled()) {\n"
+                    "            throw new IllegalStateException(\"Email not verified\");\n"
+                    "        }\n"
+                    "        return new AuthResponse(\"basic-auth-active\");\n"
+                    "    }\n"
+                    "\n"
+                    "    @Transactional\n"
+                    "    public void verifyEmail(String tokenValue) {\n"
+                    "        VerificationToken token = verificationTokenRepository.findByToken(tokenValue)\n"
+                    "                .orElseThrow(() -> new IllegalArgumentException(\"Invalid verification token\"));\n"
+                    "\n"
+                    "        if (token.isExpired()) {\n"
+                    "            throw new IllegalStateException(\"Verification token expired\");\n"
+                    "        }\n"
+                    "        User user = token.getUser();\n"
+                    "        user.setEnabled(true);\n"
+                    "        userRepository.save(user);\n"
+                    "        verificationTokenRepository.delete(token);\n"
+                    "    }\n"
+                    "}\n");
+        }
+    }
+    else
+    {
+        /* No email verification; simpler register/login (role USER) */
+        if (cfg->auth_type == AUTH_JWT)
+        {
             fprintf(f,
                     "package com.example.app.auth;\n"
                     "\n"
                     "import com.example.app.security.JwtService;\n"
+                    "import com.example.app.user.Role;\n"
                     "import com.example.app.user.User;\n"
                     "import com.example.app.user.UserRepository;\n"
                     "import jakarta.transaction.Transactional;\n"
@@ -222,13 +306,14 @@ void generate_auth(const AppConfig *cfg, const char *root)
                     "        User user = new User();\n"
                     "        user.setEmail(request.getEmail());\n"
                     "        user.setPassword(passwordEncoder.encode(request.getPassword()));\n"
+                    "        user.setRole(Role.USER);\n"
                     "        user.setEnabled(true);\n"
                     "        userRepository.save(user);\n"
                     "    }\n"
                     "\n"
                     "    public AuthResponse login(AuthRequest request) {\n"
+                    "        var authToken = new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword());\n"
                     "        try {\n"
-                    "            var authToken = new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword());\n"
                     "            authenticationManager.authenticate(authToken);\n"
                     "        } catch (BadCredentialsException ex) {\n"
                     "            throw new BadCredentialsException(\"Invalid credentials\");\n"
@@ -240,101 +325,12 @@ void generate_auth(const AppConfig *cfg, const char *root)
                     "    }\n"
                     "}\n");
         }
-    }
-    else
-    { /* BASIC auth */
-        if (cfg->mail_verification)
-        {
-            fprintf(f,
-                    "package com.example.app.auth;\n"
-                    "\n"
-                    "import com.example.app.user.User;\n"
-                    "import com.example.app.user.UserRepository;\n"
-                    "import jakarta.transaction.Transactional;\n"
-                    "import org.springframework.security.authentication.AuthenticationManager;\n"
-                    "import org.springframework.security.authentication.BadCredentialsException;\n"
-                    "import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;\n"
-                    "import org.springframework.security.crypto.password.PasswordEncoder;\n"
-                    "import org.springframework.stereotype.Service;\n"
-                    "\n"
-                    "import java.time.Instant;\n"
-                    "import java.time.temporal.ChronoUnit;\n"
-                    "import java.util.UUID;\n"
-                    "\n"
-                    "@Service\n"
-                    "public class AuthService {\n"
-                    "    private final UserRepository userRepository;\n"
-                    "    private final PasswordEncoder passwordEncoder;\n"
-                    "    private final AuthenticationManager authenticationManager;\n"
-                    "    private final VerificationTokenRepository tokenRepository;\n"
-                    "    private final EmailService emailService;\n"
-                    "\n"
-                    "    public AuthService(UserRepository userRepository,\n"
-                    "                       PasswordEncoder passwordEncoder,\n"
-                    "                       AuthenticationManager authenticationManager,\n"
-                    "                       VerificationTokenRepository tokenRepository,\n"
-                    "                       EmailService emailService) {\n"
-                    "        this.userRepository = userRepository;\n"
-                    "        this.passwordEncoder = passwordEncoder;\n"
-                    "        this.authenticationManager = authenticationManager;\n"
-                    "        this.tokenRepository = tokenRepository;\n"
-                    "        this.emailService = emailService;\n"
-                    "    }\n"
-                    "\n"
-                    "    @Transactional\n"
-                    "    public void register(RegisterRequest request) {\n"
-                    "        if (userRepository.existsByEmail(request.getEmail()))\n"
-                    "            throw new IllegalArgumentException(\"Email already in use\");\n"
-                    "        User user = new User();\n"
-                    "        user.setEmail(request.getEmail());\n"
-                    "        user.setPassword(passwordEncoder.encode(request.getPassword()));\n"
-                    "        user.setEnabled(false);\n"
-                    "        userRepository.save(user);\n"
-                    "\n"
-                    "        String tokenValue = UUID.randomUUID().toString();\n"
-                    "        VerificationToken vt = new VerificationToken();\n"
-                    "        vt.setToken(tokenValue);\n"
-                    "        vt.setUser(user);\n"
-                    "        vt.setExpiryDate(Instant.now().plus(24, ChronoUnit.HOURS));\n"
-                    "        tokenRepository.save(vt);\n"
-                    "\n"
-                    "        emailService.sendVerificationEmail(user.getEmail(), tokenValue);\n"
-                    "    }\n"
-                    "\n"
-                    "    public AuthResponse login(AuthRequest request) {\n"
-                    "        try {\n"
-                    "            var authToken = new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword());\n"
-                    "            authenticationManager.authenticate(authToken);\n"
-                    "        } catch (BadCredentialsException ex) {\n"
-                    "            throw new BadCredentialsException(\"Invalid credentials\");\n"
-                    "        }\n"
-                    "        User user = userRepository.findByEmail(request.getEmail())\n"
-                    "                .orElseThrow(() -> new IllegalArgumentException(\"User not found\"));\n"
-                    "        if (!user.isEnabled()) {\n"
-                    "            throw new IllegalStateException(\"Email not verified\");\n"
-                    "        }\n"
-                    "        return new AuthResponse(\"basic-auth-active\");\n"
-                    "    }\n"
-                    "\n"
-                    "    @Transactional\n"
-                    "    public void verifyEmail(String tokenValue) {\n"
-                    "        VerificationToken token = tokenRepository.findByToken(tokenValue)\n"
-                    "                .orElseThrow(() -> new IllegalArgumentException(\"Invalid verification token\"));\n"
-                    "        if (token.getExpiryDate().isBefore(Instant.now())) {\n"
-                    "            throw new IllegalArgumentException(\"Verification token expired\");\n"
-                    "        }\n"
-                    "        User user = token.getUser();\n"
-                    "        user.setEnabled(true);\n"
-                    "        userRepository.save(user);\n"
-                    "        tokenRepository.delete(token);\n"
-                    "    }\n"
-                    "}\n");
-        }
         else
         {
             fprintf(f,
                     "package com.example.app.auth;\n"
                     "\n"
+                    "import com.example.app.user.Role;\n"
                     "import com.example.app.user.User;\n"
                     "import com.example.app.user.UserRepository;\n"
                     "import jakarta.transaction.Transactional;\n"
@@ -365,13 +361,14 @@ void generate_auth(const AppConfig *cfg, const char *root)
                     "        User user = new User();\n"
                     "        user.setEmail(request.getEmail());\n"
                     "        user.setPassword(passwordEncoder.encode(request.getPassword()));\n"
+                    "        user.setRole(Role.USER);\n"
                     "        user.setEnabled(true);\n"
                     "        userRepository.save(user);\n"
                     "    }\n"
                     "\n"
                     "    public AuthResponse login(AuthRequest request) {\n"
+                    "        var authToken = new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword());\n"
                     "        try {\n"
-                    "            var authToken = new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword());\n"
                     "            authenticationManager.authenticate(authToken);\n"
                     "        } catch (BadCredentialsException ex) {\n"
                     "            throw new BadCredentialsException(\"Invalid credentials\");\n"
@@ -384,6 +381,7 @@ void generate_auth(const AppConfig *cfg, const char *root)
     fclose(f);
 
     /* DTOs */
+
     snprintf(path, sizeof(path), "%s/AuthRequest.java", authDir);
     f = fopen(path, "w");
     fprintf(f,
@@ -440,17 +438,12 @@ void generate_auth(const AppConfig *cfg, const char *root)
             "}\n");
     fclose(f);
 
-    /* If mail verification enabled: VerificationToken + repo + EmailService */
+    /* --- Email + VerificationToken only if mail_verification enabled --- */
     if (cfg->mail_verification)
     {
         /* VerificationToken.java */
         snprintf(path, sizeof(path), "%s/VerificationToken.java", authDir);
         f = fopen(path, "w");
-        if (!f)
-        {
-            perror("VerificationToken.java");
-            return;
-        }
         fprintf(f,
                 "package com.example.app.auth;\n"
                 "\n"
@@ -458,6 +451,8 @@ void generate_auth(const AppConfig *cfg, const char *root)
                 "import jakarta.persistence.*;\n"
                 "\n"
                 "import java.time.Instant;\n"
+                "import java.time.temporal.ChronoUnit;\n"
+                "import java.util.UUID;\n"
                 "\n"
                 "@Entity\n"
                 "public class VerificationToken {\n"
@@ -468,30 +463,31 @@ void generate_auth(const AppConfig *cfg, const char *root)
                 "    @Column(nullable = false, unique = true)\n"
                 "    private String token;\n"
                 "\n"
-                "    @ManyToOne(optional = false)\n"
+                "    @ManyToOne(optional = false, fetch = FetchType.LAZY)\n"
                 "    private User user;\n"
                 "\n"
                 "    @Column(nullable = false)\n"
-                "    private Instant expiryDate;\n"
+                "    private Instant expiry;\n"
+                "\n"
+                "    protected VerificationToken() {}\n"
+                "\n"
+                "    public VerificationToken(User user) {\n"
+                "        this.user = user;\n"
+                "        this.token = UUID.randomUUID().toString();\n"
+                "        this.expiry = Instant.now().plus(24, ChronoUnit.HOURS);\n"
+                "    }\n"
                 "\n"
                 "    public Long getId() { return id; }\n"
                 "    public String getToken() { return token; }\n"
-                "    public void setToken(String token) { this.token = token; }\n"
                 "    public User getUser() { return user; }\n"
-                "    public void setUser(User user) { this.user = user; }\n"
-                "    public Instant getExpiryDate() { return expiryDate; }\n"
-                "    public void setExpiryDate(Instant expiryDate) { this.expiryDate = expiryDate; }\n"
+                "    public Instant getExpiry() { return expiry; }\n"
+                "    public boolean isExpired() { return Instant.now().isAfter(expiry); }\n"
                 "}\n");
         fclose(f);
 
         /* VerificationTokenRepository.java */
         snprintf(path, sizeof(path), "%s/VerificationTokenRepository.java", authDir);
         f = fopen(path, "w");
-        if (!f)
-        {
-            perror("VerificationTokenRepository.java");
-            return;
-        }
         fprintf(f,
                 "package com.example.app.auth;\n"
                 "\n"
@@ -506,11 +502,6 @@ void generate_auth(const AppConfig *cfg, const char *root)
         /* EmailService.java */
         snprintf(path, sizeof(path), "%s/EmailService.java", authDir);
         f = fopen(path, "w");
-        if (!f)
-        {
-            perror("EmailService.java");
-            return;
-        }
         fprintf(f,
                 "package com.example.app.auth;\n"
                 "\n"
@@ -522,24 +513,25 @@ void generate_auth(const AppConfig *cfg, const char *root)
                 "@Service\n"
                 "public class EmailService {\n"
                 "    private final JavaMailSender mailSender;\n"
-                "    private final String from;\n"
+                "    private final String fromAddress;\n"
                 "    private final String verificationBaseUrl;\n"
                 "\n"
                 "    public EmailService(JavaMailSender mailSender,\n"
-                "                        @Value(\"${app.mail.from}\") String from,\n"
-                "                        @Value(\"${app.mail.verification-base-url}\") String verificationBaseUrl) {\n"
+                "                        @Value(\"${app.mail.from:no-reply@example.com}\") String fromAddress,\n"
+                "                        @Value(\"${app.mail.verification-base-url:http://localhost:8080}\") String verificationBaseUrl) {\n"
                 "        this.mailSender = mailSender;\n"
-                "        this.from = from;\n"
+                "        this.fromAddress = fromAddress;\n"
                 "        this.verificationBaseUrl = verificationBaseUrl;\n"
                 "    }\n"
                 "\n"
-                "    public void sendVerificationEmail(String toEmail, String token) {\n"
-                "        String verifyLink = verificationBaseUrl + token;\n"
+                "    public void sendVerificationEmail(String to, String token) {\n"
+                "        String link = verificationBaseUrl + \"/api/auth/verify?token=\" + token;\n"
+                "\n"
                 "        SimpleMailMessage message = new SimpleMailMessage();\n"
-                "        message.setFrom(from);\n"
-                "        message.setTo(toEmail);\n"
+                "        message.setTo(to);\n"
+                "        message.setFrom(fromAddress);\n"
                 "        message.setSubject(\"Verify your email\");\n"
-                "        message.setText(\"Click the link to verify your email: \" + verifyLink);\n"
+                "        message.setText(\"Please click the link to verify your account: \" + link);\n"
                 "        mailSender.send(message);\n"
                 "    }\n"
                 "}\n");

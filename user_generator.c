@@ -33,9 +33,27 @@ void generate_user(const AppConfig *cfg, const char *root)
     snprintf(userDir, sizeof(userDir), "%s/user", base);
     ensure_dir(userDir);
 
+    /* Role.java */
+    snprintf(path, sizeof(path), "%s/Role.java", userDir);
+    FILE *f = fopen(path, "w");
+    if (!f)
+    {
+        perror("Role.java");
+        return;
+    }
+
+    fprintf(f,
+            "package com.example.app.user;\n"
+            "\n"
+            "public enum Role {\n"
+            "    USER,\n"
+            "    ADMIN\n"
+            "}\n");
+    fclose(f);
+
     /* User.java */
     snprintf(path, sizeof(path), "%s/User.java", userDir);
-    FILE *f = fopen(path, "w");
+    f = fopen(path, "w");
     if (!f)
     {
         perror("User.java");
@@ -67,19 +85,37 @@ void generate_user(const AppConfig *cfg, const char *root)
             "    private String password;\n"
             "\n"
             "    @Column(nullable = false)\n"
-            "    private boolean enabled = false;\n"
+            "    private boolean enabled = true;\n"
+            "\n"
+            "    @Enumerated(EnumType.STRING)\n"
+            "    @Column(nullable = false)\n"
+            "    private Role role = Role.USER;\n"
             "\n"
             "    public Long getId() { return id; }\n"
+            "\n"
             "    public String getEmail() { return email; }\n"
             "    public void setEmail(String email) { this.email = email; }\n"
-            "    @Override public String getUsername() { return email; }\n"
+            "\n"
+            "    @Override\n"
+            "    public String getUsername() { return email; }\n"
+            "\n"
             "    public void setPassword(String password) { this.password = password; }\n"
-            "    @Override public String getPassword() { return password; }\n"
+            "\n"
+            "    @Override\n"
+            "    public String getPassword() { return password; }\n"
+            "\n"
+            "    public boolean isEnabledFlag() { return enabled; }\n"
             "    public void setEnabled(boolean enabled) { this.enabled = enabled; }\n"
             "\n"
-            "    @Override public Collection<? extends GrantedAuthority> getAuthorities() {\n"
-            "        return List.of(new SimpleGrantedAuthority(\"ROLE_USER\"));\n"
+            "    public Role getRole() { return role; }\n"
+            "    public void setRole(Role role) { this.role = role; }\n"
+            "\n"
+            "    @Override\n"
+            "    public Collection<? extends GrantedAuthority> getAuthorities() {\n"
+            "        String authority = \"ROLE_\" + (role != null ? role.name() : \"USER\");\n"
+            "        return List.of(new SimpleGrantedAuthority(authority));\n"
             "    }\n"
+            "\n"
             "    @Override public boolean isAccountNonExpired() { return true; }\n"
             "    @Override public boolean isAccountNonLocked() { return true; }\n"
             "    @Override public boolean isCredentialsNonExpired() { return true; }\n"
