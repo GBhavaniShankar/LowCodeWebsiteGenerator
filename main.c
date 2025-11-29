@@ -5,7 +5,9 @@
 /* parser stuff */
 int yyparse(void);
 extern FILE *yyin;
-AppConfig g_config = {NULL, AUTH_JWT, 0, NULL, NULL};
+
+/* Global config instance */
+AppConfig g_config;
 
 /* generators */
 #include "file_util.h"
@@ -17,6 +19,7 @@ AppConfig g_config = {NULL, AUTH_JWT, 0, NULL, NULL};
 #include "auth_generator.h"
 #include "demo_generator.h"
 #include "init_generator.h"
+#include "crud_generator.h" /* New */
 
 int main(int argc, char **argv)
 {
@@ -36,12 +39,18 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    /* defaults */
+    /* Initialize defaults */
     g_config.project_name = NULL;
     g_config.auth_type = AUTH_JWT;
     g_config.mail_verification = 0;
     g_config.admin_email = NULL;
     g_config.admin_password = NULL;
+    g_config.portal_start = NULL;
+    g_config.portal_end = NULL;
+    g_config.tables = NULL;
+    g_config.table_count = 0;
+    g_config.permissions = NULL;
+    g_config.permission_count = 0;
 
     if (yyparse() != 0)
     {
@@ -61,7 +70,11 @@ int main(int argc, char **argv)
     generate_auth(&g_config, root);
     generate_demo(&g_config, root);
     generate_init(&g_config, root);
+    generate_crud(&g_config, root); /* New */
 
     printf("Project generated at: %s\n", root);
+
+    // Optional: Free memory for tables/permissions here if desired
+
     return 0;
 }
