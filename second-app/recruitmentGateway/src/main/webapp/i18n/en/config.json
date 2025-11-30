@@ -1,0 +1,31 @@
+{
+  "recruitmentGatewayApp": {
+    "config": {
+      "home": {
+        "title": "Configs",
+        "refreshListLabel": "Refresh list",
+        "createLabel": "Create a new Config",
+        "createOrEditLabel": "Create or edit a Config",
+        "notFound": "No Configs found"
+      },
+      "delete": {
+        "question": "Are you sure you want to delete Config {{ id }}?"
+      },
+      "detail": {
+        "title": "Config"
+      },
+      "id": "ID",
+      "portalActive": "Portal Active",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "sampleFormUrl": "Sample Form Url"
+    }
+  },
+  "recruitmentBackendApp": {
+    "config": {
+      "created": "A new Config is created with identifier {{ param }}",
+      "updated": "A Config is updated with identifier {{ param }}",
+      "deleted": "A Config is deleted with identifier {{ param }}"
+    }
+  }
+}

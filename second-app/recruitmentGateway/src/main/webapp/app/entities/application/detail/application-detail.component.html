@@ -1,0 +1,74 @@
+<div class="d-flex justify-content-center">
+  <div class="col-8">
+    @if (application(); as applicationRef) {
+      <div>
+        <h2 data-cy="applicationDetailsHeading"><span jhiTranslate="recruitmentGatewayApp.application.detail.title">Application</span></h2>
+
+        <hr />
+
+        <jhi-alert-error />
+
+        <jhi-alert />
+
+        <dl class="row-md jh-entity-details">
+          <dt><span jhiTranslate="global.field.id">ID</span></dt>
+          <dd>
+            <span>{{ applicationRef.id }}</span>
+          </dd>
+          <dt><span jhiTranslate="recruitmentGatewayApp.application.uniqueNumber">Unique Number</span></dt>
+          <dd>
+            <span>{{ applicationRef.uniqueNumber }}</span>
+          </dd>
+          <dt><span jhiTranslate="recruitmentGatewayApp.application.submissionDate">Submission Date</span></dt>
+          <dd>
+            <span>{{ applicationRef.submissionDate | formatMediumDatetime }}</span>
+          </dd>
+          <dt><span jhiTranslate="recruitmentGatewayApp.application.status">Status</span></dt>
+          <dd>
+            <span [jhiTranslate]="'recruitmentGatewayApp.ApplicationStatus.' + (applicationRef.status ?? 'null')">{{
+              {
+                null: '',
+                SAVED: 'SAVED',
+                SUBMITTED: 'SUBMITTED',
+                SHORTLISTED: 'SHORTLISTED',
+                INTERVIEW_DATE_SET: 'INTERVIEW_DATE_SET',
+                WITHDRAWN: 'WITHDRAWN',
+                CLOSED: 'CLOSED',
+              }[applicationRef.status ?? 'null']
+            }}</span>
+          </dd>
+          <dt><span jhiTranslate="recruitmentGatewayApp.application.paymentSuccessful">Payment Successful</span></dt>
+          <dd>
+            <span>{{ applicationRef.paymentSuccessful }}</span>
+          </dd>
+          <dt><span jhiTranslate="recruitmentGatewayApp.application.applicant">Applicant</span></dt>
+          <dd>
+            @if (application()!.applicant) {
+              <div>
+                <a [routerLink]="['/applicant', application()!.applicant?.id, 'view']">{{ applicationRef.applicant?.username }}</a>
+              </div>
+            }
+          </dd>
+          <dt><span jhiTranslate="recruitmentGatewayApp.application.feeCategory">Fee Category</span></dt>
+          <dd>
+            @if (application()!.feeCategory) {
+              <div>
+                <a [routerLink]="['/application-fee-category', application()!.feeCategory?.id, 'view']">{{
+                  applicationRef.feeCategory?.id
+                }}</a>
+              </div>
+            }
+          </dd>
+        </dl>
+
+        <button type="submit" (click)="previousState()" class="btn btn-info" data-cy="entityDetailsBackButton">
+          <fa-icon icon="arrow-left"></fa-icon>&nbsp;<span jhiTranslate="entity.action.back">Back</span>
+        </button>
+
+        <button type="button" [routerLink]="['/application', applicationRef.id, 'edit']" class="btn btn-primary">
+          <fa-icon icon="pencil-alt"></fa-icon>&nbsp;<span jhiTranslate="entity.action.edit">Edit</span>
+        </button>
+      </div>
+    }
+  </div>
+</div>

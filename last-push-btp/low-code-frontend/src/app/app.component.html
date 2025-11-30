@@ -1,0 +1,26 @@
+<div class="layout" *ngIf="isLoggedIn; else publicLayout">
+  <aside class="sidebar">
+    <h2>AgileTracker</h2>
+    <hr style="border-color: #495057;">
+    
+    <nav>
+      <a *ngFor="let item of menuItems" 
+         [routerLink]="item.link" 
+         routerLinkActive="active" 
+         class="nav-link">
+        {{ item.label }}
+      </a>
+    </nav>
+
+    <div class="spacer"></div>
+    <button (click)="logout()" class="btn-logout">Logout</button>
+  </aside>
+
+  <main class="content">
+    <router-outlet></router-outlet>
+  </main>
+</div>
+
+<ng-template #publicLayout>
+  <router-outlet></router-outlet>
+</ng-template>

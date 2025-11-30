@@ -1,0 +1,147 @@
+<div class="d-flex justify-content-center">
+  <div class="col-8">
+    <form name="editForm" novalidate (ngSubmit)="save()" [formGroup]="editForm">
+      <h2
+        id="jhi-application-heading"
+        data-cy="ApplicationCreateUpdateHeading"
+        jhiTranslate="recruitmentGatewayApp.application.home.createOrEditLabel"
+      >
+        Create or edit a Application
+      </h2>
+
+      <div>
+        <jhi-alert-error />
+
+        @if (editForm.controls.id.value !== null) {
+          <div class="mb-3">
+            <label class="form-label" for="field_id" jhiTranslate="recruitmentGatewayApp.application.id">ID</label>
+            <input type="number" class="form-control" name="id" id="field_id" data-cy="id" formControlName="id" [readonly]="true" />
+          </div>
+        }
+
+        @let uniqueNumberRef = editForm.get('uniqueNumber')!;
+        <div class="mb-3">
+          <label class="form-label" for="field_uniqueNumber" jhiTranslate="recruitmentGatewayApp.application.uniqueNumber"
+            >Unique Number</label
+          >
+          <input
+            type="text"
+            class="form-control"
+            name="uniqueNumber"
+            id="field_uniqueNumber"
+            data-cy="uniqueNumber"
+            formControlName="uniqueNumber"
+          />
+          @if (uniqueNumberRef.invalid && (uniqueNumberRef.dirty || uniqueNumberRef.touched)) {
+            <div>
+              @if (editForm.get('uniqueNumber')?.errors?.required) {
+                <small class="form-text text-danger" jhiTranslate="entity.validation.required">This field is required.</small>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_submissionDate" jhiTranslate="recruitmentGatewayApp.application.submissionDate"
+            >Submission Date</label
+          >
+          <div class="d-flex">
+            <input
+              id="field_submissionDate"
+              data-cy="submissionDate"
+              type="datetime-local"
+              class="form-control"
+              name="submissionDate"
+              formControlName="submissionDate"
+              placeholder="YYYY-MM-DD HH:mm"
+            />
+          </div>
+        </div>
+
+        @let statusRef = editForm.get('status')!;
+        <div class="mb-3">
+          <label class="form-label" for="field_status" jhiTranslate="recruitmentGatewayApp.application.status">Status</label>
+          <select class="form-control" name="status" formControlName="status" id="field_status" data-cy="status">
+            <option [ngValue]="null">{{ 'recruitmentGatewayApp.ApplicationStatus.null' | translate }}</option>
+            @for (applicationStatus of applicationStatusValues; track $index) {
+              <option [value]="applicationStatus">{{ 'recruitmentGatewayApp.ApplicationStatus.' + applicationStatus | translate }}</option>
+            }
+          </select>
+          @if (statusRef.invalid && (statusRef.dirty || statusRef.touched)) {
+            <div>
+              @if (editForm.get('status')?.errors?.required) {
+                <small class="form-text text-danger" jhiTranslate="entity.validation.required">This field is required.</small>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_paymentSuccessful" jhiTranslate="recruitmentGatewayApp.application.paymentSuccessful"
+            >Payment Successful</label
+          >
+          <input
+            type="checkbox"
+            class="form-check"
+            name="paymentSuccessful"
+            id="field_paymentSuccessful"
+            data-cy="paymentSuccessful"
+            formControlName="paymentSuccessful"
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_applicant" jhiTranslate="recruitmentGatewayApp.application.applicant">Applicant</label>
+          <select
+            class="form-control"
+            id="field_applicant"
+            data-cy="applicant"
+            name="applicant"
+            formControlName="applicant"
+            [compareWith]="compareApplicant"
+          >
+            <option [ngValue]="null"></option>
+            @for (applicantOption of applicantsSharedCollection; track $index) {
+              <option [ngValue]="applicantOption">{{ applicantOption.username }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_feeCategory" jhiTranslate="recruitmentGatewayApp.application.feeCategory"
+            >Fee Category</label
+          >
+          <select
+            class="form-control"
+            id="field_feeCategory"
+            data-cy="feeCategory"
+            name="feeCategory"
+            formControlName="feeCategory"
+            [compareWith]="compareApplicationFeeCategory"
+          >
+            <option [ngValue]="null"></option>
+            @for (applicationFeeCategoryOption of applicationFeeCategoriesSharedCollection; track $index) {
+              <option [ngValue]="applicationFeeCategoryOption">{{ applicationFeeCategoryOption.id }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <button type="button" id="cancel-save" data-cy="entityCreateCancelButton" class="btn btn-secondary" (click)="previousState()">
+          <fa-icon icon="ban"></fa-icon>&nbsp;<span jhiTranslate="entity.action.cancel">Cancel</span>
+        </button>
+
+        <button
+          type="submit"
+          id="save-entity"
+          data-cy="entityCreateSaveButton"
+          [disabled]="editForm.invalid || isSaving"
+          class="btn btn-primary"
+        >
+          <fa-icon icon="save"></fa-icon>&nbsp;<span jhiTranslate="entity.action.save">Save</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,29 @@
+{
+  "recruitmentGatewayApp": {
+    "applicationFeeCategory": {
+      "home": {
+        "title": "Application Fee Categories",
+        "refreshListLabel": "Refresh list",
+        "createLabel": "Create a new Application Fee Category",
+        "createOrEditLabel": "Create or edit a Application Fee Category",
+        "notFound": "No Application Fee Categories found"
+      },
+      "delete": {
+        "question": "Are you sure you want to delete Application Fee Category {{ id }}?"
+      },
+      "detail": {
+        "title": "Application Fee Category"
+      },
+      "id": "ID",
+      "name": "Name",
+      "fee": "Fee"
+    }
+  },
+  "recruitmentBackendApp": {
+    "applicationFeeCategory": {
+      "created": "A new Application Fee Category is created with identifier {{ param }}",
+      "updated": "A Application Fee Category is updated with identifier {{ param }}",
+      "deleted": "A Application Fee Category is deleted with identifier {{ param }}"
+    }
+  }
+}

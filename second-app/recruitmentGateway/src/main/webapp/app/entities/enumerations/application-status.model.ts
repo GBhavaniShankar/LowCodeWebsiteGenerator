@@ -1,0 +1,13 @@
+export enum ApplicationStatus {
+  SAVED = 'SAVED',
+
+  SUBMITTED = 'SUBMITTED',
+
+  SHORTLISTED = 'SHORTLISTED',
+
+  INTERVIEW_DATE_SET = 'INTERVIEW_DATE_SET',
+
+  WITHDRAWN = 'WITHDRAWN',
+
+  CLOSED = 'CLOSED',
+}

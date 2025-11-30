@@ -1,0 +1,44 @@
+{
+  "annotations": {
+    "changelogDate": "20251112133652"
+  },
+  "applications": ["recruitmentGateway", "recruitmentBackend"],
+  "clientRootFolder": "recruitmentBackend",
+  "databaseType": "sql",
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "title",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "message",
+      "fieldType": "TextBlob"
+    },
+    {
+      "fieldName": "isRead",
+      "fieldType": "Boolean"
+    },
+    {
+      "fieldName": "generatedBy",
+      "fieldType": "NotificationSource",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "ADMIN,SYSTEM"
+    }
+  ],
+  "microserviceName": "recruitmentBackend",
+  "name": "Notification",
+  "pagination": "pagination",
+  "relationships": [
+    {
+      "otherEntityField": "username",
+      "otherEntityName": "applicant",
+      "relationshipName": "recipient",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceClass"
+}

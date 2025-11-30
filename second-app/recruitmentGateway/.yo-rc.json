@@ -1,0 +1,28 @@
+{
+  "generator-jhipster": {
+    "applicationIndex": 0,
+    "applicationType": "gateway",
+    "applications": {
+      "recruitmentBackend": {
+        "applicationIndex": 1,
+        "serverPort": "8081"
+      }
+    },
+    "authenticationType": "jwt",
+    "baseName": "recruitmentGateway",
+    "buildTool": "maven",
+    "clientFramework": "angular",
+    "databaseType": "sql",
+    "devServerPort": 4200,
+    "entities": ["Application", "Config", "Notification", "Advertisement", "Applicant", "ApplicationFeeCategory"],
+    "jhipsterVersion": "8.11.0",
+    "languages": ["en"],
+    "lastLiquibaseTimestamp": 1762954792000,
+    "monorepository": true,
+    "nativeLanguage": "en",
+    "packageName": "com.recruitment.gateway",
+    "serverPort": "8080",
+    "skipCommitHook": true,
+    "skipServer": true
+  }
+}

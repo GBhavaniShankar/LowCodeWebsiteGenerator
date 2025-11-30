@@ -1,0 +1,33 @@
+{
+  "annotations": {
+    "changelogDate": "20251112133552"
+  },
+  "applications": ["recruitmentGateway", "recruitmentBackend"],
+  "clientRootFolder": "recruitmentBackend",
+  "databaseType": "sql",
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "portalActive",
+      "fieldType": "Boolean"
+    },
+    {
+      "fieldName": "startDate",
+      "fieldType": "Instant"
+    },
+    {
+      "fieldName": "endDate",
+      "fieldType": "Instant"
+    },
+    {
+      "fieldName": "sampleFormUrl",
+      "fieldType": "String"
+    }
+  ],
+  "microserviceName": "recruitmentBackend",
+  "name": "Config",
+  "pagination": "pagination",
+  "relationships": [],
+  "searchEngine": "no",
+  "service": "serviceClass"
+}
