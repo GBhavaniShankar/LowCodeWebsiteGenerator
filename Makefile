@@ -69,6 +69,8 @@ install-frontend:
 	@echo "📦 Injecting Shell Blueprints..."
 	cp -r $(FRONTEND_SRC_DIR)/blueprints/shell/* $(FRONTEND_OUT)/src/app/
 
+	mv $(FRONTEND_OUT)/src/app/styles.css $(FRONTEND_OUT)/src/styles.css
+
 	# --- FIX: Inject Environment Variables ---
 	@echo "🌍 Injecting Environment..."
 	mkdir -p $(FRONTEND_OUT)/src/environments
@@ -97,3 +99,5 @@ clean:
 	rm -rf $(OUTPUT_DIR) backendgen app-spec.json
 	cd $(BACKEND_SRC_DIR) && make clean
 	rm -rf $(FRONTEND_OUT)/src/app/features/generated/*
+
+app: build-generator generate-backend install-frontend

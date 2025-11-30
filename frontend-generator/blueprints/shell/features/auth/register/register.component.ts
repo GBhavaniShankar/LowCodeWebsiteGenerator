@@ -8,17 +8,7 @@ import { CommonModule } from '@angular/common';
   selector: 'app-register',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink],
-  templateUrl: './register.component.html',
-  styles: [`
-    .register-container { max-width: 400px; margin: 50px auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
-    .form-group { margin-bottom: 15px; }
-    label { display: block; margin-bottom: 5px; }
-    input { width: 100%; padding: 8px; box-sizing: border-box; }
-    button { width: 100%; padding: 10px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
-    button:disabled { background-color: #ccc; }
-    .error { color: red; margin-bottom: 10px; }
-    .success { color: green; margin-bottom: 10px; }
-  `]
+  templateUrl: './register.component.html'
 })
 export class RegisterComponent {
   registerForm: FormGroup;
@@ -44,18 +34,16 @@ export class RegisterComponent {
     this.errorMsg = '';
     this.successMsg = '';
 
-    // Matches POST /api/auth/register
     this.authService.register(this.registerForm.value).subscribe({
-      next: (res) => {
+      next: (response) => {
         this.isLoading = false;
-        // The backend returns a string message (e.g., "Registration successful...")
-        this.successMsg = typeof res === 'string' ? res : 'Registration successful! You can now login.';
+        // Verify: response is now a simple string
+        this.successMsg = response || 'Registration successful! You can now login.';
         this.registerForm.reset();
       },
       error: (err) => {
         this.isLoading = false;
-        // Simple error handling
-        if (err.status === 400) {
+        if (err.status === 400 || err.status === 500) {
            this.errorMsg = 'Email already in use or invalid data.'; 
         } else {
            this.errorMsg = 'Registration failed. Please try again.';

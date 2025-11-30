@@ -20,10 +20,12 @@ export class AuthService {
 
   constructor(private http: HttpClient, private router: Router) {}
 
+  // 1. REGISTER: Expects TEXT because Controller returns "Registration successful" string
   register(credentials: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/register`, credentials, { responseType: 'text' });
   }
 
+  // 2. LOGIN: Expects JSON because Service returns 'new AuthResponse(token)'
   login(credentials: any): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/login`, credentials).pipe(
       tap(response => {
@@ -43,30 +45,21 @@ export class AuthService {
     return localStorage.getItem(this.tokenKey);
   }
 
-  // --- NEW: Helper to get the Role from the Token ---
   getUserRole(): string {
     const token = this.getToken();
     if (!token) return '';
-
     try {
-      // Simple JWT decode (Base64)
       const payload = token.split('.')[1];
       const decoded = JSON.parse(atob(payload));
-      
-      // NOTE: We assume the backend puts the role in 'role' or 'authorities' claim.
-      // If your backend doesn't support this yet, this might return undefined.
-      // You might need to ask your teammate to add .claim("role", "ADMIN") to the JWT.
       return decoded.role || decoded.authorities || 'USER'; 
     } catch (e) {
       return '';
     }
   }
 
-  // Helper to check permissions
   hasPermission(allowedRoles: string[]): boolean {
     const userRole = this.getUserRole();
     if (!userRole) return false;
-    // If 'ANY' is passed, just checking if logged in
     if (allowedRoles.includes('ANY')) return true;
     return allowedRoles.includes(userRole);
   }
