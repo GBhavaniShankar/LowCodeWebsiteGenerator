@@ -41,7 +41,7 @@ export class LoginComponent {
     this.isLoading = true;
     this.authService.login(this.loginForm.value).subscribe({
       next: () => {
-        this.router.navigate(['/']); // Redirect to home/dashboard
+        this.router.navigate(['/teams']); // Redirect to home/dashboard
       },
       error: (err) => {
         this.errorMsg = 'Invalid email or password';

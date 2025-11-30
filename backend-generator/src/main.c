@@ -3,13 +3,6 @@
 #include "config.h"
 #include "frontend_bridge.h"
 
-/* parser stuff */
-int yyparse(void);
-extern FILE *yyin;
-
-/* Global config instance */
-AppConfig g_config;
-
 /* generators */
 #include "file_util.h"
 #include "pom_generator.h"
@@ -21,6 +14,15 @@ AppConfig g_config;
 #include "demo_generator.h"
 #include "init_generator.h"
 #include "crud_generator.h" /* New */
+
+
+/* parser stuff */
+int yyparse(void);
+extern FILE *yyin;
+
+/* Global config instance */
+AppConfig g_config;
+
 
 int main(int argc, char **argv)
 {
@@ -73,15 +75,11 @@ int main(int argc, char **argv)
     generate_init(&g_config, root);
     generate_crud(&g_config, root); /* New */
 
-    printf("Project generated at: %s\n", root);
+    generate_verification(&g_config, root); // <--- MAKE SURE THIS IS HERE!
+    generate_mail(&g_config, root);         // <--- AND THIS
 
     // Optional: Free memory for tables/permissions here if desired
 
-    /* ... existing generator calls ... */
-    generate_init(&g_config, root);
-    generate_crud(&g_config, root);
-
-    /* --- ADD THIS LINE --- */
     generate_frontend_json(&g_config, root);
 
     printf("Project generated at: %s\n", root);

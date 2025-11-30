@@ -1,11 +1,21 @@
 const fs = require('fs');
 const path = require('path');
 
-// --- Helper Functions ---
+// ==========================================
+// 1. HELPER FUNCTIONS
+// ==========================================
+
 const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
 
 const loadTemplate = (filename) => {
-  return fs.readFileSync(path.join(__dirname, '../blueprints/templates', filename), 'utf8');
+  // Logic: Go up one level from 'scripts' to 'frontend-generator', then into 'blueprints/templates'
+  const templatePath = path.join(__dirname, '../blueprints/templates', filename);
+  try {
+    return fs.readFileSync(templatePath, 'utf8');
+  } catch (e) {
+    console.error(`❌ Error loading template: ${templatePath}`);
+    process.exit(1);
+  }
 };
 
 const fillTemplate = (template, resourceName) => {
@@ -14,7 +24,9 @@ const fillTemplate = (template, resourceName) => {
     .replace(/{{ResourceNameLower}}/g, resourceName.toLowerCase());
 };
 
-// --- Content Builders ---
+// ==========================================
+// 2. CONTENT BUILDERS (The Logic)
+// ==========================================
 
 const buildInterfaceProps = (fields) => {
   return fields.map(f => {
@@ -48,15 +60,20 @@ const buildFormFields = (fields) => {
     if (f.name === 'id') return ''; 
 
     let inputHtml = '';
+    // Handle Enums (Dropdowns)
     if (f.type === 'choice' && f.options) {
       const options = f.options.map(opt => `<option value="${opt}">${opt}</option>`).join('\n');
       inputHtml = `<select formControlName="${f.name}" id="${f.name}">
           <option value="">Select ${f.name}</option>
           ${options}
         </select>`;
-    } else if (f.type === 'ref') {
+    } 
+    // Handle References (Simple ID input)
+    else if (f.type === 'ref') {
       inputHtml = `<input type="number" formControlName="${f.name}" id="${f.name}" placeholder="Enter ${f.name} ID">`;
-    } else {
+    } 
+    // Default Text
+    else {
       inputHtml = `<input type="text" formControlName="${f.name}" id="${f.name}">`;
     }
 
@@ -67,20 +84,20 @@ const buildFormFields = (fields) => {
   }).join('\n');
 };
 
-// --- NEW: Permission Calculator ---
+// ==========================================
+// 3. PERMISSION LOGIC
+// ==========================================
+
 const getCreatePermissions = (resourceName, endpointsByRole) => {
   const allowed = [];
-  if (!endpointsByRole) return "'ANY'"; // Fallback if no config
+  if (!endpointsByRole) return "'ANY'"; 
 
   Object.keys(endpointsByRole).forEach(role => {
     const actions = endpointsByRole[role];
-    // Check if this role has 'create' action for this resource
     const hasCreate = actions.some(a => 
       a.resource === resourceName && a.action === 'create'
     );
     if (hasCreate) {
-      // Map JSON roles to Backend Roles (usually prefixed with ROLE_)
-      // Or keep them simple. Let's assume the token has "ADMIN" or "USER"
       allowed.push(`'${role}'`);
     }
   });
@@ -89,17 +106,36 @@ const getCreatePermissions = (resourceName, endpointsByRole) => {
   return allowed.join(', ');
 };
 
-// --- Main Execution ---
+// ==========================================
+// 4. MAIN EXECUTION
+// ==========================================
 
+// Arg 2: Config File Path
 const configFile = process.argv[2];
 if (!configFile) {
-  console.error("Please provide a path to the JSON config file.");
+  console.error("❌ Error: Config file argument missing. Usage: node generate.js <config_path> [output_dir]");
   process.exit(1);
 }
 
-const config = JSON.parse(fs.readFileSync(configFile, 'utf8'));
-const OUTPUT_DIR = path.join(__dirname, '../src/app/features/generated');
+// Arg 3: Output Directory (Optional, defaults to relative path)
+const outputArg = process.argv[3];
+const OUTPUT_DIR = outputArg 
+  ? path.resolve(outputArg) 
+  : path.join(__dirname, '../../output/frontend/src/app/features/generated');
 
+console.log(`📂 Output Directory: ${OUTPUT_DIR}`);
+
+// Read Config
+let config;
+try {
+  config = JSON.parse(fs.readFileSync(configFile, 'utf8'));
+} catch (e) {
+  console.error(`❌ Error reading config file: ${configFile}`);
+  console.error(e.message);
+  process.exit(1);
+}
+
+// Prepare Output Directory
 if (fs.existsSync(OUTPUT_DIR)) {
   fs.rmSync(OUTPUT_DIR, { recursive: true, force: true });
 }
@@ -107,64 +143,70 @@ fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 
 const generatedRoutes = [];
 
-config.resources.forEach(res => {
-  const resourceName = res.name; 
-  const folderName = resourceName.toLowerCase(); 
-  const resourcePath = path.join(OUTPUT_DIR, folderName);
-  
-  fs.mkdirSync(resourcePath);
+// Loop through Resources and Generate Files
+if (config.resources) {
+    config.resources.forEach(res => {
+      const resourceName = res.name; 
+      const folderName = resourceName.toLowerCase(); 
+      const resourcePath = path.join(OUTPUT_DIR, folderName);
+      
+      fs.mkdirSync(resourcePath);
 
-  // 1. Model
-  let modelContent = loadTemplate('model.tpl');
-  modelContent = fillTemplate(modelContent, resourceName);
-  modelContent = modelContent.replace('{{InterfaceProps}}', buildInterfaceProps(res.fields));
-  fs.writeFileSync(path.join(resourcePath, `${folderName}.model.ts`), modelContent);
+      // 1. Model
+      let modelContent = loadTemplate('model.tpl');
+      modelContent = fillTemplate(modelContent, resourceName);
+      modelContent = modelContent.replace('{{InterfaceProps}}', buildInterfaceProps(res.fields));
+      fs.writeFileSync(path.join(resourcePath, `${folderName}.model.ts`), modelContent);
 
-  // 2. Service
-  let serviceContent = loadTemplate('service.tpl');
-  serviceContent = fillTemplate(serviceContent, resourceName);
-  fs.writeFileSync(path.join(resourcePath, `${folderName}.service.ts`), serviceContent);
+      // 2. Service
+      let serviceContent = loadTemplate('service.tpl');
+      serviceContent = fillTemplate(serviceContent, resourceName);
+      fs.writeFileSync(path.join(resourcePath, `${folderName}.service.ts`), serviceContent);
 
-  // 3. List Component TS (With Permissions)
-  let listTsContent = loadTemplate('list.component.ts.tpl');
-  listTsContent = fillTemplate(listTsContent, resourceName);
-  const allowedRoles = getCreatePermissions(resourceName, config.endpoints_by_role);
-  listTsContent = listTsContent.replace('{{AllowedRoles}}', allowedRoles);
-  fs.writeFileSync(path.join(resourcePath, `${folderName}-list.component.ts`), listTsContent);
+      // 3. List Component TS
+      let listTsContent = loadTemplate('list.component.ts.tpl');
+      listTsContent = fillTemplate(listTsContent, resourceName);
+      const allowedRoles = getCreatePermissions(resourceName, config.endpoints_by_role);
+      listTsContent = listTsContent.replace('{{AllowedRoles}}', allowedRoles);
+      fs.writeFileSync(path.join(resourcePath, `${folderName}-list.component.ts`), listTsContent);
 
-  // 4. List Component HTML (With *ngIf)
-  let listHtmlContent = loadTemplate('list.component.html.tpl');
-  listHtmlContent = fillTemplate(listHtmlContent, resourceName);
-  listHtmlContent = listHtmlContent.replace('{{TableHeaders}}', buildTableHeaders(res.fields));
-  listHtmlContent = listHtmlContent.replace('{{TableRows}}', buildTableRows(res.fields));
-  fs.writeFileSync(path.join(resourcePath, `${folderName}-list.component.html`), listHtmlContent);
+      // 4. List Component HTML
+      let listHtmlContent = loadTemplate('list.component.html.tpl');
+      listHtmlContent = fillTemplate(listHtmlContent, resourceName);
+      listHtmlContent = listHtmlContent.replace('{{TableHeaders}}', buildTableHeaders(res.fields));
+      listHtmlContent = listHtmlContent.replace('{{TableRows}}', buildTableRows(res.fields));
+      fs.writeFileSync(path.join(resourcePath, `${folderName}-list.component.html`), listHtmlContent);
 
-  // 5. Form Component TS
-  let formTsContent = loadTemplate('form.component.ts.tpl');
-  formTsContent = fillTemplate(formTsContent, resourceName);
-  formTsContent = formTsContent.replace('{{FormControls}}', buildFormControls(res.fields));
-  fs.writeFileSync(path.join(resourcePath, `${folderName}-form.component.ts`), formTsContent);
+      // 5. Form Component TS
+      let formTsContent = loadTemplate('form.component.ts.tpl');
+      formTsContent = fillTemplate(formTsContent, resourceName);
+      formTsContent = formTsContent.replace('{{FormControls}}', buildFormControls(res.fields));
+      fs.writeFileSync(path.join(resourcePath, `${folderName}-form.component.ts`), formTsContent);
 
-  // 6. Form Component HTML
-  let formHtmlContent = loadTemplate('form.component.html.tpl');
-  formHtmlContent = fillTemplate(formHtmlContent, resourceName);
-  formHtmlContent = formHtmlContent.replace('{{FormFields}}', buildFormFields(res.fields));
-  fs.writeFileSync(path.join(resourcePath, `${folderName}-form.component.html`), formHtmlContent);
+      // 6. Form Component HTML
+      let formHtmlContent = loadTemplate('form.component.html.tpl');
+      formHtmlContent = fillTemplate(formHtmlContent, resourceName);
+      formHtmlContent = formHtmlContent.replace('{{FormFields}}', buildFormFields(res.fields));
+      fs.writeFileSync(path.join(resourcePath, `${folderName}-form.component.html`), formHtmlContent);
 
-  // Register Route
-  generatedRoutes.push({
-    path: `${folderName}s`, 
-    listComponent: `${resourceName}ListComponent`,
-    listPath: `./${folderName}/${folderName}-list.component`,
-    formPath: `${folderName}s/new`,
-    formComponent: `${resourceName}FormComponent`,
-    formImportPath: `./${folderName}/${folderName}-form.component`
-  });
+      // Add to Routes Registry
+      generatedRoutes.push({
+        path: `${folderName}s`, 
+        listComponent: `${resourceName}ListComponent`,
+        // Import path relative to routes.gen.ts
+        listPath: `./${folderName}/${folderName}-list.component`,
+        formPath: `${folderName}s/new`,
+        formComponent: `${resourceName}FormComponent`,
+        formImportPath: `./${folderName}/${folderName}-form.component`
+      });
 
-  console.log(`✅ Generated ${resourceName} module`);
-});
+      console.log(`✅ Generated Module: ${resourceName}`);
+    });
+}
 
-// --- Generate Routes File ---
+// ==========================================
+// 5. GENERATE ROUTES FILE
+// ==========================================
 
 const imports = generatedRoutes.map(r => {
   return `import { ${r.listComponent} } from '${r.listPath}';
@@ -185,4 +227,4 @@ ${routesArr}
 `;
 
 fs.writeFileSync(path.join(OUTPUT_DIR, 'routes.gen.ts'), routesContent);
-console.log(`🚀 Routes generated at ${path.join(OUTPUT_DIR, 'routes.gen.ts')}`);
+console.log(`🚀 Routes generated at: ${path.join(OUTPUT_DIR, 'routes.gen.ts')}`);

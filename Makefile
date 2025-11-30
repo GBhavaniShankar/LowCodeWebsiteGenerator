@@ -26,12 +26,12 @@ build-generator:
 	cp $(BACKEND_SRC_DIR)/bin/backendgen .
 
 # 2. Run C Generator
-generate-all:
+generate-all: build-generator
 	@echo "🚀 Generating Backend & Frontend Spec..."
 	mkdir -p $(OUTPUT_DIR)
 	
 	# Pass the config file variable to the generator
-	./backendgen $(CONFIG_FILE) $(OUTPUT_DIR)
+	backend-generator/bin/backendgen $(CONFIG_FILE) $(OUTPUT_DIR)
 	
 	# Organize Output
 	mkdir -p $(BACKEND_OUT)
@@ -58,7 +58,6 @@ generate-backend:
 	# Move the generated JSON spec to root for the frontend script
 	mv $(OUTPUT_DIR)/app-spec.json . 2>/dev/null || true
 
-# 3. Setup Angular & Run Frontend Generator
 install-frontend:
 	@echo "🎨 Setting up Angular Frontend..."
 	
@@ -70,12 +69,20 @@ install-frontend:
 	@echo "📦 Injecting Shell Blueprints..."
 	cp -r $(FRONTEND_SRC_DIR)/blueprints/shell/* $(FRONTEND_OUT)/src/app/
 
+	# --- FIX: Inject Environment Variables ---
+	@echo "🌍 Injecting Environment..."
+	mkdir -p $(FRONTEND_OUT)/src/environments
+	cp -r $(FRONTEND_SRC_DIR)/blueprints/environments/* $(FRONTEND_OUT)/src/environments/
+	# -----------------------------------------
+
 	cd $(FRONTEND_OUT) && npm install
 
 	@echo "⚡ Generating Dynamic Pages..."
-	node $(FRONTEND_SRC_DIR)/scripts/generate.js app-spec.json
+	# Pass the output path explicitly
+	node $(FRONTEND_SRC_DIR)/scripts/generate.js app-spec.json $(FRONTEND_OUT)/src/app/features/generated
 
 	@echo "✅ DONE! Frontend is in: $(FRONTEND_OUT)"
+
 
 # 4. Run Tests
 TEST_DIR = backend-generator/tests
@@ -89,3 +96,4 @@ clean:
 	@echo "🧹 Cleaning up..."
 	rm -rf $(OUTPUT_DIR) backendgen app-spec.json
 	cd $(BACKEND_SRC_DIR) && make clean
+	rm -rf $(FRONTEND_OUT)/src/app/features/generated/*

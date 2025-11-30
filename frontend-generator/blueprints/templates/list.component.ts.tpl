@@ -22,7 +22,7 @@ export class {{ResourceName}}ListComponent implements OnInit {
 
   ngOnInit(): void {
     // Check Permissions based on the generated config
-    const allowedRoles = [{{AllowedRoles}}]; 
+    const allowedRoles: string[] = [{{AllowedRoles}}];
     this.canCreate = this.authService.hasPermission(allowedRoles);
 
     this.service.getAll().subscribe({

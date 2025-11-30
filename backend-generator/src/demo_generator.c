@@ -5,52 +5,31 @@
 static void make_java_base(char *base, size_t n, const char *root)
 {
     char dir[512];
-
     ensure_dir(root);
-
-    snprintf(dir, sizeof(dir), "%s/src", root);
-    ensure_dir(dir);
-    snprintf(dir, sizeof(dir), "%s/src/main", root);
-    ensure_dir(dir);
-    snprintf(dir, sizeof(dir), "%s/src/main/java", root);
-    ensure_dir(dir);
-    snprintf(dir, sizeof(dir), "%s/src/main/java/com", root);
-    ensure_dir(dir);
-    snprintf(dir, sizeof(dir), "%s/src/main/java/com/example", root);
-    ensure_dir(dir);
-
-    snprintf(base, n, "%s/src/main/java/com/example/app", root);
-    ensure_dir(base);
+    // ... ensure standard path ...
+    snprintf(dir, sizeof(dir), "%s/src/main/java/com/example/app", root);
+    // We assume the structure is created by java_core_generator, but good to ensure
+    ensure_dir(dir); 
+    snprintf(base, n, "%s", dir);
 }
 
 void generate_demo(const AppConfig *cfg, const char *root)
 {
     (void)cfg;
 
-    char base[512], path[512];
-    make_java_base(base, sizeof(base), root);
+    char base[512], output_path[512];
+    // Reconstruct the path manually or use the helper if you made it shared
+    // For simplicity, we just rebuild the string logic here
+    snprintf(base, sizeof(base), "%s/src/main/java/com/example/app", root);
+    ensure_dir(base);
 
-    snprintf(path, sizeof(path), "%s/DemoController.java", base);
-    FILE *f = fopen(path, "w");
-    if (!f)
-    {
-        perror("DemoController.java");
-        return;
-    }
+    snprintf(output_path, sizeof(output_path), "%s/DemoController.java", base);
 
-    fprintf(f,
-            "package com.example.app;\n"
-            "\n"
-            "import org.springframework.web.bind.annotation.GetMapping;\n"
-            "import org.springframework.web.bind.annotation.RestController;\n"
-            "\n"
-            "@RestController\n"
-            "public class DemoController {\n"
-            "    @GetMapping(\"/api/demo/hello\")\n"
-            "    public String hello() {\n"
-            "        return \"Hello from generated backend!\";\n"
-            "    }\n"
-            "}\n");
+    TemplateData data;
+    init_template_data(&data);
 
-    fclose(f);
+    write_template_to_file("backend-generator/templates/DemoController.java.tpl", output_path, &data);
+
+    free_template_data(&data);
+    printf("Generated DemoController.java from template.\n");
 }
