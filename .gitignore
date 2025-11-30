@@ -1,55 +1,96 @@
-# Prerequisites
-*.d
+# ==========================
+# Project Specific Output
+# ==========================
+# The main output directory for your generator
+output/
+test_backend_output/
 
-# Object files
+# Generated Intermediate Files
+app-spec.json
+backendgen
+
+# Generated folders anywhere in the project
+generated/
+
+# Sensitive Environment Variables
+*.env
+
+# ==========================
+# C / C++ / Flex / Bison
+# ==========================
+# Build directories
+bin/
+build/
+
+# Object files and libraries
 *.o
-*.ko
 *.obj
-*.elf
-
-# Linker output
-*.ilk
-*.map
-*.exp
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Libraries
-*.lib
 *.a
-*.la
-*.lo
-
-# Shared objects (inc. Windows DLLs)
-*.dll
 *.so
-*.so.*
 *.dylib
+*.dll
+*.lib
+*.lo
+*.la
 
 # Executables
 *.exe
 *.out
 *.app
-*.i*86
-*.x86_64
-*.hex
 
-# Debug files
+# Flex (Lex) generated
+lex.yy.c
+lex.yy.cc
+
+# Bison (Yacc) generated
+y.tab.c
+y.tab.h
+*.tab.c
+*.tab.h
+*.output
+
+# Debugging
 *.dSYM/
-*.su
-*.idb
 *.pdb
+*.exp
+*.map
 
-# Kernel Module Compile Results
-*.mod*
-*.cmd
-.tmp_versions/
-modules.order
-Module.symvers
-Mkfile.old
-dkms.conf
+# ==========================
+# Java / Maven (Backend)
+# ==========================
+target/
+*.class
+*.jar
+*.war
+*.ear
+hs_err_pid*
 
-# debug information files
-*.dwo
+# ==========================
+# Node / Angular (Frontend)
+# ==========================
+node_modules/
+dist/
+.angular/
+package-lock.json
+# ^ Keep package-lock.json if you want version consistency, 
+#   but ignore it if the generator creates it fresh every time.
+
+# ==========================
+# Python (Tests)
+# ==========================
+__pycache__/
+*.py[cod]
+venv/
+.pytest_cache/
+
+# ==========================
+# OS & IDE Clutter
+# ==========================
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*~
+*.bak
+*.log
+*.odt

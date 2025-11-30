@@ -1,0 +1,21 @@
+1. EMAIL VERIFICATION CONFIGURATION
+
+
+HOW TO RUN:
+
+
+type app.jdl
+$ nvm use 22
+$ jhipster import-jdl app.jdl
+
+// code gets generated
+
+
+to run:
+
+$ cd <frontend>
+$ npm start -> start client
+
+$ <in backend folder>
+$ ./mvnw -> start server
+
