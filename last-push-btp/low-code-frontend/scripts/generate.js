@@ -67,6 +67,28 @@ const buildFormFields = (fields) => {
   }).join('\n');
 };
 
+// --- NEW: Permission Calculator ---
+const getCreatePermissions = (resourceName, endpointsByRole) => {
+  const allowed = [];
+  if (!endpointsByRole) return "'ANY'"; // Fallback if no config
+
+  Object.keys(endpointsByRole).forEach(role => {
+    const actions = endpointsByRole[role];
+    // Check if this role has 'create' action for this resource
+    const hasCreate = actions.some(a => 
+      a.resource === resourceName && a.action === 'create'
+    );
+    if (hasCreate) {
+      // Map JSON roles to Backend Roles (usually prefixed with ROLE_)
+      // Or keep them simple. Let's assume the token has "ADMIN" or "USER"
+      allowed.push(`'${role}'`);
+    }
+  });
+
+  if (allowed.length === 0) return ""; 
+  return allowed.join(', ');
+};
+
 // --- Main Execution ---
 
 const configFile = process.argv[2];
@@ -103,12 +125,14 @@ config.resources.forEach(res => {
   serviceContent = fillTemplate(serviceContent, resourceName);
   fs.writeFileSync(path.join(resourcePath, `${folderName}.service.ts`), serviceContent);
 
-  // 3. List Component TS
+  // 3. List Component TS (With Permissions)
   let listTsContent = loadTemplate('list.component.ts.tpl');
   listTsContent = fillTemplate(listTsContent, resourceName);
+  const allowedRoles = getCreatePermissions(resourceName, config.endpoints_by_role);
+  listTsContent = listTsContent.replace('{{AllowedRoles}}', allowedRoles);
   fs.writeFileSync(path.join(resourcePath, `${folderName}-list.component.ts`), listTsContent);
 
-  // 4. List Component HTML
+  // 4. List Component HTML (With *ngIf)
   let listHtmlContent = loadTemplate('list.component.html.tpl');
   listHtmlContent = fillTemplate(listHtmlContent, resourceName);
   listHtmlContent = listHtmlContent.replace('{{TableHeaders}}', buildTableHeaders(res.fields));
@@ -126,8 +150,6 @@ config.resources.forEach(res => {
   formHtmlContent = fillTemplate(formHtmlContent, resourceName);
   formHtmlContent = formHtmlContent.replace('{{FormFields}}', buildFormFields(res.fields));
   fs.writeFileSync(path.join(resourcePath, `${folderName}-form.component.html`), formHtmlContent);
-
-  // Note: CSS generation removed as requested.
 
   // Register Route
   generatedRoutes.push({

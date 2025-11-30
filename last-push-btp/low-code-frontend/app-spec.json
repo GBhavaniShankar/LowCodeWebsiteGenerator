@@ -27,5 +27,14 @@
         { "name": "sprint", "type": "ref", "ref_table": "Sprint" }
       ]
     }
-  ]
+  ],
+  "endpoints_by_role": {
+    "ADMIN": [
+      { "resource": "Team", "action": "create" },
+      { "resource": "Sprint", "action": "create" }
+    ],
+    "USER": [
+      { "resource": "Ticket", "action": "create" }
+    ]
+  }
 }

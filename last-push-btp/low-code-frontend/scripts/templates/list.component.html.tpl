@@ -1,7 +1,8 @@
 <div class="container">
   <div class="header-actions">
     <h2>{{ResourceName}} List</h2>
-    <a routerLink="/{{ResourceNameLower}}s/new" class="btn-primary">Create New</a>
+    
+    <a *ngIf="canCreate" routerLink="/{{ResourceNameLower}}s/new" class="btn-primary">Create New</a>
   </div>
   
   <table class="data-table">

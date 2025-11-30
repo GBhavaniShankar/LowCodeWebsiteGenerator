@@ -11,7 +11,8 @@ import { AuthService } from './core/services/auth.service';
   styleUrl: './app.component.css'
 })
 export class AppComponent {
-  isLoggedIn = false;
+  // isLoggedIn = false;
+  isLoggedIn = true; // TEMPORARY: to always show sidebar during development
   
   // This list will eventually be populated by your Generator Script logic 
   // or you can simply hardcode links for now.
