@@ -1,61 +1,96 @@
+# ==========================
+# Project Specific Output
+# ==========================
+# The main output directory for your generator
+output/
+test_backend_output/
+
+# Generated Intermediate Files
+app-spec.json
+backendgen
+
+# Generated folders anywhere in the project
 generated/
 
+# Sensitive Environment Variables
 *.env
+
+# ==========================
+# C / C++ / Flex / Bison
+# ==========================
+# Build directories
 bin/
 build/
 
-*output/
-
-# --- Lex (Flex) Generated Files ---
-# Standard output file for Flex
-lex.yy.c
-lex.yy.cc
-
-# --- Yacc (Bison) Generated Files ---
-# Standard output files (C source and Header)
-y.tab.c
-y.tab.h
-
-# Bison output if using specific flags or prefixes
-*.tab.c
-*.tab.h
-*.tab.cpp
-*.tab.hpp
-
-# Debugging/Report files (created by --verbose or -v)
-y.output
-*.output
-
-# Graphviz output (if generating graphs of the automaton)
-*.dot
-
-# --- Standard C/C++ Build Artifacts ---
-# Object files
+# Object files and libraries
 *.o
 *.obj
-
-# Static and Dynamic Libraries
 *.a
 *.so
 *.dylib
 *.dll
+*.lib
+*.lo
+*.la
 
-# --- Executables ---
-# Standard output executable
-a.out
+# Executables
 *.exe
+*.out
+*.app
 
-# TODO: Add your specific final executable name here
-# my_parser
-# my_compiler
-backendgen
-app-spec.json
+# Flex (Lex) generated
+lex.yy.c
+lex.yy.cc
 
-# --- OS and Editor Clutter ---
+# Bison (Yacc) generated
+y.tab.c
+y.tab.h
+*.tab.c
+*.tab.h
+*.output
+
+# Debugging
+*.dSYM/
+*.pdb
+*.exp
+*.map
+
+# ==========================
+# Java / Maven (Backend)
+# ==========================
+target/
+*.class
+*.jar
+*.war
+*.ear
+hs_err_pid*
+
+# ==========================
+# Node / Angular (Frontend)
+# ==========================
+node_modules/
+dist/
+.angular/
+package-lock.json
+# ^ Keep package-lock.json if you want version consistency, 
+#   but ignore it if the generator creates it fresh every time.
+
+# ==========================
+# Python (Tests)
+# ==========================
+__pycache__/
+*.py[cod]
+venv/
+.pytest_cache/
+
+# ==========================
+# OS & IDE Clutter
+# ==========================
 .DS_Store
 .vscode/
 .idea/
 *.swp
 *~
 *.bak
+*.log
 *.odt
