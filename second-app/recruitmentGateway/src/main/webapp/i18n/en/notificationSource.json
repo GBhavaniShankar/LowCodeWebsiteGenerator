@@ -1,9 +1,0 @@
-{
-  "recruitmentGatewayApp": {
-    "NotificationSource": {
-      "null": "",
-      "ADMIN": "ADMIN",
-      "SYSTEM": "SYSTEM"
-    }
-  }
-}

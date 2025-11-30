@@ -1,1 +1,0 @@
-Need to link the generated gateway to actual entities in the backend. DONE
