@@ -5,7 +5,7 @@ const path = require('path');
 const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
 
 const loadTemplate = (filename) => {
-  return fs.readFileSync(path.join(__dirname, 'templates', filename), 'utf8');
+  return fs.readFileSync(path.join(__dirname, '../blueprints/templates', filename), 'utf8');
 };
 
 const fillTemplate = (template, resourceName) => {
