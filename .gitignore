@@ -1,1 +1,61 @@
 generated/
+
+*.env
+bin/
+build/
+
+*output/
+
+# --- Lex (Flex) Generated Files ---
+# Standard output file for Flex
+lex.yy.c
+lex.yy.cc
+
+# --- Yacc (Bison) Generated Files ---
+# Standard output files (C source and Header)
+y.tab.c
+y.tab.h
+
+# Bison output if using specific flags or prefixes
+*.tab.c
+*.tab.h
+*.tab.cpp
+*.tab.hpp
+
+# Debugging/Report files (created by --verbose or -v)
+y.output
+*.output
+
+# Graphviz output (if generating graphs of the automaton)
+*.dot
+
+# --- Standard C/C++ Build Artifacts ---
+# Object files
+*.o
+*.obj
+
+# Static and Dynamic Libraries
+*.a
+*.so
+*.dylib
+*.dll
+
+# --- Executables ---
+# Standard output executable
+a.out
+*.exe
+
+# TODO: Add your specific final executable name here
+# my_parser
+# my_compiler
+backendgen
+app-spec.json
+
+# --- OS and Editor Clutter ---
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*~
+*.bak
+*.odt

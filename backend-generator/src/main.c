@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "config.h"
+#include "frontend_bridge.h"
 
 /* parser stuff */
 int yyparse(void);
@@ -75,6 +76,16 @@ int main(int argc, char **argv)
     printf("Project generated at: %s\n", root);
 
     // Optional: Free memory for tables/permissions here if desired
+
+    /* ... existing generator calls ... */
+    generate_init(&g_config, root);
+    generate_crud(&g_config, root);
+
+    /* --- ADD THIS LINE --- */
+    generate_frontend_json(&g_config, root);
+
+    printf("Project generated at: %s\n", root);
+    // ...
 
     return 0;
 }
