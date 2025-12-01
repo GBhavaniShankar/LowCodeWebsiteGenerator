@@ -31,7 +31,7 @@ all: directories $(TARGET)
 
 # Link everything
 $(TARGET): $(OBJS)
-	@echo "🔨 [Backend] Linking..."
+	@echo "[Backend] Linking..."
 	$(CC) $(CFLAGS) -o $@ $^ -lfl
 
 # Compile C files
@@ -48,12 +48,12 @@ $(BUILD_DIR)/lex.yy.o: $(BUILD_DIR)/lex.yy.c
 
 # Generate C from Bison
 $(BUILD_DIR)/config.tab.c $(BUILD_DIR)/config.tab.h: $(GRAMMAR_DIR)/config.y
-	@echo "⚙️  [Backend] Running Bison..."
+	@echo "[Backend] Running Bison..."
 	$(YACC) -d -o $(BUILD_DIR)/config.tab.c $<
 
 # Generate C from Flex
 $(BUILD_DIR)/lex.yy.c: $(GRAMMAR_DIR)/config.l $(BUILD_DIR)/config.tab.h
-	@echo "⚙️  [Backend] Running Flex..."
+	@echo "[Backend] Running Flex..."
 	$(LEX) -o $@ $<
 
 directories:

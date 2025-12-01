@@ -25,7 +25,11 @@ export class {{ResourceName}}FormComponent {
 
   onSubmit() {
     if (this.form.valid) {
-      this.service.create(this.form.value).subscribe(() => {
+      const payload = { ...this.form.value }
+
+      {{RefLogic}}
+
+      this.service.create(payload).subscribe(() => {
         this.router.navigate(['/{{ResourceNameLower}}s']);
       });
     }
