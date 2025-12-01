@@ -21,7 +21,7 @@ class Colors:
     WARNING = '\033[93m'
 
 def print_status(step, message, success):
-    symbol = "✅ PASS" if success else "❌ FAIL"
+    symbol = "PASS" if success else "FAIL"
     color = Colors.OKGREEN if success else Colors.FAIL
     print(f"{color}[{step}] {symbol}: {message}{Colors.ENDC}")
     if not success:
@@ -61,7 +61,7 @@ class ComplexTester:
         self.step_09_admin_view_all()
         self.step_10_user_security_boundary()
         
-        print(f"\n{Colors.OKGREEN}{Colors.BOLD}🎉 ALL COMPLEX SCENARIOS PASSED!{Colors.ENDC}")
+        print(f"\n{Colors.OKGREEN}{Colors.BOLD} ALL COMPLEX SCENARIOS PASSED!{Colors.ENDC}")
 
     # ----------------------------------------------------------------
     # PHASE 1: ADMIN SETUP
