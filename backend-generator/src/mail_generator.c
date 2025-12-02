@@ -16,6 +16,7 @@ static void make_java_base(char *base, size_t n, const char *root)
 
 void generate_mail(const AppConfig *cfg, const char *root)
 {
+    // If config says No, skip generation
     if (!cfg->mail_verification) {
         return;
     }
@@ -26,14 +27,15 @@ void generate_mail(const AppConfig *cfg, const char *root)
     snprintf(mailDir, sizeof(mailDir), "%s/mail", base);
     ensure_dir(mailDir);
 
+    // Prepare Template Data (Empty, because the template uses Spring ${properties})
     TemplateData data;
     init_template_data(&data);
 
-    // 1. EmailService.java
+    // 1. Generate EmailService.java (Interface)
     snprintf(path, sizeof(path), "%s/EmailService.java", mailDir);
     write_template_to_file("backend-generator/templates/EmailService.java.tpl", path, &data);
 
-    // 2. EmailServiceImpl.java
+    // 2. Generate EmailServiceImpl.java (Implementation)
     snprintf(path, sizeof(path), "%s/EmailServiceImpl.java", mailDir);
     write_template_to_file("backend-generator/templates/EmailServiceImpl.java.tpl", path, &data);
 
