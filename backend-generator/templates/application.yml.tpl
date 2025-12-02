@@ -13,12 +13,12 @@ spring:
       enabled: true
       path: /h2-console
 
-  # SMTP Configuration for Email Service
+  # SMTP Configuration (Reads from Environment Variables)
   mail:
-    host: {{SmtpHost}}
-    port: {{SmtpPort}}
-    username: {{SmtpUsername}}
-    password: {{SmtpPassword}}
+    host: ${SMTP_HOST}
+    port: ${SMTP_PORT}
+    username: ${SMTP_USERNAME}
+    password: ${SMTP_PASSWORD}
     properties:
       mail:
         smtp:
@@ -37,9 +37,9 @@ app:
 {{JwtConfig}}
 
   admin:
-    email: {{AdminEmail}}
-    password: {{AdminPassword}}
+    email: ${ADMIN_EMAIL}
+    password: ${ADMIN_PASSWORD}
 
   mail:
-    from: {{MailFrom}}
-    verification-base-url: {{VerificationBaseUrl}}
+    from: ${MAIL_FROM}
+    verification-base-url: http://localhost:8080
