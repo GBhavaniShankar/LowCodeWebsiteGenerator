@@ -37,6 +37,7 @@ generate-all: build-generator
 	mkdir -p $(BACKEND_OUT)
 	mv $(OUTPUT_DIR)/src $(BACKEND_OUT)/src
 	mv $(OUTPUT_DIR)/pom.xml $(BACKEND_OUT)/
+	mv $(OUTPUT_DIR)/.env $(BACKEND_OUT)/.env
 	
 	# Move the generated JSON spec to root for the frontend script
 	mv $(OUTPUT_DIR)/app-spec.json . 2>/dev/null || true
@@ -54,6 +55,7 @@ generate-backend:
 	mkdir -p $(BACKEND_OUT)
 	mv $(OUTPUT_DIR)/src $(BACKEND_OUT)/src
 	mv $(OUTPUT_DIR)/pom.xml $(BACKEND_OUT)/
+	mv $(OUTPUT_DIR)/.env $(BACKEND_OUT)/.env
 	
 	# Move the generated JSON spec to root for the frontend script
 	mv $(OUTPUT_DIR)/app-spec.json . 2>/dev/null || true

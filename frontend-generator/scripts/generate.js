@@ -64,20 +64,33 @@ const buildFormControls = (fields) => {
   }).filter(Boolean).join(',\n');
 };
 
+// ...
+
 const buildFormFields = (fields) => {
   return fields.map(f => {
     if (f.name === 'id') return ''; 
 
     let inputHtml = '';
+    
+    // 1. Handle Enums (Dropdowns)
     if (f.type === 'choice' && f.options) {
       const options = f.options.map(opt => `<option value="${opt}">${opt}</option>`).join('\n');
       inputHtml = `<select formControlName="${f.name}" id="${f.name}">
           <option value="">Select ${f.name}</option>
           ${options}
         </select>`;
-    } else if (f.type === 'ref') {
+    } 
+    // 2. Handle References (Simple ID input)
+    else if (f.type === 'ref') {
       inputHtml = `<input type="number" formControlName="${f.name}" id="${f.name}" placeholder="Enter ${f.name} ID">`;
-    } else {
+    } 
+    // 3. Handle Dates (NEW FIX)
+    else if (f.type === 'date') {
+      // type="date" forces the browser to send YYYY-MM-DD
+      inputHtml = `<input type="date" formControlName="${f.name}" id="${f.name}">`;
+    }
+    // 4. Default Text
+    else {
       inputHtml = `<input type="text" formControlName="${f.name}" id="${f.name}">`;
     }
 
@@ -87,6 +100,8 @@ const buildFormFields = (fields) => {
     </div>`;
   }).join('\n');
 };
+
+// ...
 
 const getCreatePermissions = (resourceName, endpointsByRole) => {
   const allowed = [];
