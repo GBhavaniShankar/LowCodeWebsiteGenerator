@@ -54,6 +54,13 @@
       <version>2.5.0</version>
     </dependency>
 
+    <!-- Dotenv for .env file support -->
+    <dependency>
+        <groupId>io.github.cdimascio</groupId>
+        <artifactId>dotenv-java</artifactId>
+        <version>3.0.0</version>
+    </dependency>
+
     {{JwtDependencies}}
 
     {{MailDependencies}}
