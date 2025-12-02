@@ -23,7 +23,7 @@ class Colors:
     BOLD = '\033[1m'
 
 def print_status(step, message, success):
-    symbol = "✅ PASS" if success else "❌ FAIL"
+    symbol = "✅ PASS" if success else "FAIL"
     color = Colors.OKGREEN if success else Colors.FAIL
     print(f"{color}[{step}] {symbol}: {message}{Colors.ENDC}")
     if not success:
@@ -54,7 +54,7 @@ class APITester:
         self.test_6_user_get_categories()
         self.test_7_user_create_category_fail()
 
-        print(f"\n{Colors.OKGREEN}{Colors.BOLD}🎉 ALL TESTS PASSED SUCCESSFULLY!{Colors.ENDC}")
+        print(f"\n{Colors.OKGREEN}{Colors.BOLD} ALL TESTS PASSED SUCCESSFULLY!{Colors.ENDC}")
 
     # ==========================================
     # TESTS

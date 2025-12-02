@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, Router } from '@angular/router';
 import { AuthService } from './core/services/auth.service';
+import { GENERATED_MENU } from './features/generated/menu.gen';
 
 @Component({
   selector: 'app-root',
@@ -14,14 +15,8 @@ export class AppComponent {
   // isLoggedIn = false;
   isLoggedIn = true; // TEMPORARY: to always show sidebar during development
   
-  // This list will eventually be populated by your Generator Script logic 
-  // or you can simply hardcode links for now.
-  // For the final automation, we often make the sidebar dynamic too.
-  menuItems = [
-    { label: 'Teams', link: '/teams' },
-    { label: 'Sprints', link: '/sprints' },
-    { label: 'Tickets', link: '/tickets' }
-  ];
+  menuItems = GENERATED_MENU
+  
 
   constructor(private authService: AuthService) {
     // Subscribe to auth state to show/hide sidebar

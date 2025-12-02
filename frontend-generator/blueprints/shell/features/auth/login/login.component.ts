@@ -4,6 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { CommonModule } from '@angular/common';
 
+
 @Component({
   selector: 'app-login',
   standalone: true,
@@ -22,7 +23,7 @@ export class LoginComponent {
   ) {
     // FIX: If user is already logged in, don't show login page.
     if (this.authService.getToken()) {
-      this.router.navigate(['/teams']);
+      this.router.navigate(['/profile']);
     }
 
     this.loginForm = this.fb.group({
@@ -38,7 +39,7 @@ export class LoginComponent {
     this.authService.login(this.loginForm.value).subscribe({
       next: () => {
         // FIX: Redirect to a real page upon success
-        this.router.navigate(['/teams']);
+        this.router.navigate(['/profile']);
       },
       error: (err) => {
         this.errorMsg = 'Invalid email or password';
