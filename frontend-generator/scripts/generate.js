@@ -91,12 +91,22 @@ const buildFormFields = (fields) => {
 const getCreatePermissions = (resourceName, endpointsByRole) => {
   const allowed = [];
   if (!endpointsByRole) return "'ANY'"; 
+
   Object.keys(endpointsByRole).forEach(role => {
     const actions = endpointsByRole[role];
-    const hasCreate = actions.some(a => a.resource === resourceName && a.action === 'create');
-    if (hasCreate) allowed.push(`'ROLE_${role.toUpperCase()}'`);
+    // FIX: Check for BOTH 'create' AND 'create-own'
+    const hasCreate = actions.some(a => 
+      a.resource === resourceName && (a.action === 'create' || a.action === 'create-own')
+    );
+    
+    if (hasCreate) {
+      // Ensure we add the ROLE_ prefix to match Backend
+      allowed.push(`'ROLE_${role.toUpperCase()}'`);
+    }
   });
-  return allowed.length === 0 ? "" : allowed.join(', ');
+
+  if (allowed.length === 0) return ""; 
+  return allowed.join(', ');
 };
 
 // ==========================================
@@ -238,3 +248,17 @@ ${routesArr}
 
 fs.writeFileSync(path.join(OUTPUT_DIR, 'routes.gen.ts'), routesContent);
 console.log(`Routes generated at: ${path.join(OUTPUT_DIR, 'routes.gen.ts')}`);
+
+const menuItems = generatedRoutes.map(r => {
+  // Capitalize the path to make a Label (e.g. "teams" -> "Teams")
+  const label = r.path.charAt(0).toUpperCase() + r.path.slice(1);
+  return `  { label: '${label}', link: '/${r.path}' }`;
+}).join(',\n');
+
+const menuContent = `export const GENERATED_MENU = [
+${menuItems}
+];
+`;
+
+fs.writeFileSync(path.join(OUTPUT_DIR, 'menu.gen.ts'), menuContent);
+console.log(`Menu config generated at: ${path.join(OUTPUT_DIR, 'menu.gen.ts')}`);

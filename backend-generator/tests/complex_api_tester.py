@@ -20,7 +20,7 @@ class Colors:
     BOLD = '\033[1m'
 
 def print_status(step, message, success):
-    symbol = "✅ PASS" if success else "❌ FAIL"
+    symbol = "✅ PASS" if success else "FAIL"
     color = Colors.OKGREEN if success else Colors.FAIL
     print(f"{color}[{step}] {symbol}: {message}{Colors.ENDC}")
     if not success:
@@ -46,7 +46,7 @@ class ComplexTester:
         self.step_3_create_sprint()
         self.step_4_user_workflow()
         
-        print(f"\n{Colors.OKGREEN}{Colors.BOLD}🎉 HIERARCHY TEST COMPLETED SUCCESSFULLY!{Colors.ENDC}")
+        print(f"\n{Colors.OKGREEN}{Colors.BOLD} HIERARCHY TEST COMPLETED SUCCESSFULLY!{Colors.ENDC}")
 
     # ----------------------------------------------------------------
     # ADMIN ACTIONS
