@@ -9,7 +9,7 @@ OUTPUT_DIR = output
 
 # --- CONFIGURATION: INPUTS ---
 # Point to your new config folder here
-CONFIG_FILE = configs/application_portal.cfg
+CONFIG_FILE = configs/simple_fixed_blog.cfg
 
 # --- OUTPUT PATHS ---
 FRONTEND_OUT = $(OUTPUT_DIR)/frontend
